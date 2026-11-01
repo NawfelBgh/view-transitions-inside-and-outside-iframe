@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+  <head>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      button {
+        font-size: 1rem;
+      }
+
+      button:disabled::after {
+        content: "...";
+      }
+
+      ::view-transition-old(root),
+      ::view-transition-new(root) {
+        animation-duration: 0.5s;
+      }
+    </style>
+  </head>
+  <body>
+    <label>
+      <input type="checkbox" id="pendingBefore" checked />
+      Set pending state BEFORE startViewTransition()
+    </label>
+    <button id="counter">Count: <span id="count">0</span></button>
+
+    <script>
+      const button = document.getElementById("counter");
+      const countElement = document.getElementById("count");
+
+      let count = 0;
+      let isPending = false;
+
+      function render() {
+        countElement.textContent = count;
+        button.disabled = isPending;
+        console.log(
+          `rendered to the DOM (count = ${count}, isPending = ${isPending})`,
+        );
+      }
+
+      function delay(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      }
+
+      button.addEventListener("click", async () => {
+        const setPendingBefore =
+          document.getElementById("pendingBefore").checked;
+
+        if (setPendingBefore) {
+          // Option 1:
+          // Update the loading state before starting
+          // the view transition.
+          isPending = true;
+          render();
+
+          console.log("startViewTransition");
+          const transition = document.startViewTransition(async () => {
+            await delay(1000);
+            count++;
+            isPending = false;
+            render();
+          });
+        } else {
+          // Option 2:
+          // Update the loading state inside the
+          // view transition callback.
+          console.log("startViewTransition");
+          const transition = document.startViewTransition(async () => {
+            isPending = true;
+            render();
+            await delay(1000);
+            count++;
+            isPending = false;
+            render();
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
